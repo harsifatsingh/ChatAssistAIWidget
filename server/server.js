@@ -1,31 +1,47 @@
+// server/server.js
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const helmet    = require('helmet');
 const { Configuration, OpenAIApi } = require('openai');
+const sanitizeHtml = require('sanitize-html');
+const cors = require('cors');
 
 const app = express();
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-const config = new Configuration({ apiKey: process.env.OPENAI_API_KEY });
-const openai = new OpenAIApi(config);
+// Rate limiter
+app.use('/api/chat', rateLimit({ windowMs:60000, max:30 }));
+
+const openai = new OpenAIApi(new Configuration({ apiKey: process.env.OPENAI_API_KEY }));
 
 app.post('/api/chat', async (req, res) => {
-  const { question } = req.body;
+  const raw = req.body.question || '';
+  const question = sanitizeHtml(raw, { allowedTags: [], allowedAttributes: {} });
   try {
-    const completion = await openai.createChatCompletion({
+    const response = await openai.createChatCompletion({
       model: 'gpt-4',
+      stream: true,
       messages: [
         { role: 'system', content: 'You are a helpful assistant.' },
         { role: 'user', content: question }
       ]
-    });
-    res.json({ answer: completion.data.choices[0].message.content });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'AI request failed.' });
+    }, { responseType: 'stream' });
+
+    res.setHeader('Content-Type','text/event-stream');
+    response.data.pipe(res);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'AI error' });
   }
 });
 
+app.post('/api/analytics', (req, res) => {
+  // TODO: store or forward analytics
+  res.sendStatus(204);
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server listening on ${PORT}`));

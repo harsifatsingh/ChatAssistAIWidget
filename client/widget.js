@@ -1,86 +1,101 @@
-(function(window, document) {
-    // Configuration
-    const CHATASSIST_API = window.CHATASSIST_API_URL || 'https://your-domain.com/api/chat';
-    const WIDGET_ID = 'chatassist-widget';
+// client/widget.js
+;(function(window, document) {
+    const API_URL = window.CHATASSIST_API_URL;
+    const CSS_URL = window.CHATASSIST_CSS_URL;
   
-    // Create chat container
-    const container = document.createElement('div');
-    container.id = WIDGET_ID;
-    container.innerHTML = `
-      <div class="chat-bar">Chat with us!</div>
-      <div class="chat-window hidden">
-        <div class="messages"></div>
-        <form class="input-form">
-          <input type="text" placeholder="Ask me anything..." required />
-          <button type="submit">Send</button>
+    // Insert CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = CSS_URL;
+    document.head.appendChild(link);
+  
+    // Build widget
+    const root = document.createElement('div');
+    root.id = 'chatassist-widget';
+    root.innerHTML = `
+      <button class="chat-toggle" aria-expanded="false" aria-label="Open chat">
+        💬 Chat
+      </button>
+      <div class="chat-window hidden" role="dialog" aria-modal="true" aria-label="Customer support chat">
+        <div class="messages" role="log" aria-live="polite"></div>
+        <form class="input-form" aria-label="Send a message">
+          <input type="text" aria-label="Type your question" required />
+          <button type="submit" aria-label="Send message">➤</button>
         </form>
       </div>
     `;
-    document.body.appendChild(container);
+    document.body.appendChild(root);
   
-    // Load CSS
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = window.CHATASSIST_CSS_URL || 'https://your-domain.com/client/widget.css';
-    document.head.appendChild(link);
+    const toggle = root.querySelector('.chat-toggle');
+    const windowEl = root.querySelector('.chat-window');
+    const messagesEl = root.querySelector('.messages');
+    const form = root.querySelector('form');
+    const input = form.querySelector('input');
   
-    // Toggle chat window
-    const bar = container.querySelector('.chat-bar');
-    const windowEl = container.querySelector('.chat-window');
-    bar.addEventListener('click', () => {
+    // Toggle
+    toggle.addEventListener('click', () => {
+      const expanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!expanded));
       windowEl.classList.toggle('hidden');
-      sendAnalytics('widget_toggle');
+      sendAnalytics('widget_toggled');
+      if (!expanded) input.focus();
     });
   
-    // Handle form submission
-    const form = container.querySelector('.input-form');
-    const input = form.querySelector('input');
-    const messages = container.querySelector('.messages');
-  
-    form.addEventListener('submit', async (e) => {
+    // Handle submit & streaming
+    form.addEventListener('submit', async e => {
       e.preventDefault();
-      const question = input.value.trim();
-      if (!question) return;
-      appendMessage('user', question);
+      const text = input.value.trim(); if (!text) return;
+      appendMessage('user', text);
       input.value = '';
-      sendAnalytics('question_submitted');
+      sendAnalytics('message_submitted');
   
       try {
-        const res = await fetch(CHATASSIST_API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question })
+        const res = await fetch(API_URL, {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ question: text, stream: true })
         });
-        const data = await res.json();
-        appendMessage('bot', data.answer);
-        sendAnalytics('answer_received');
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder(); let buffer = '';
+        appendMessage('bot', ''); // placeholder
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split('\n');
+          buffer = parts.pop();
+          for (const chunk of parts) {
+            if (!chunk) continue;
+            const data = JSON.parse(chunk);
+            updateLastBot(data.choices[0].delta.content);
+          }
+        }
+        sendAnalytics('message_received');
       } catch (err) {
-        appendMessage('bot', 'Sorry, something went wrong.');
+        appendMessage('bot', '⚠️ Error loading answer');
         console.error(err);
-        sendAnalytics('error_occurred');
+        sendAnalytics('error');
       }
     });
   
     function appendMessage(role, text) {
-      const msgEl = document.createElement('div');
-      msgEl.className = `message ${role}`;
-      msgEl.textContent = text;
-      messages.appendChild(msgEl);
-      messages.scrollTop = messages.scrollHeight;
+      const el = document.createElement('div');
+      el.className = `message ${role}`;
+      el.textContent = text;
+      messagesEl.appendChild(el);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
   
-    // Analytics integration (Google Analytics + custom events)
-    function sendAnalytics(event) {
-      if (window.ga) window.ga('send', 'event', 'ChatAssist', event);
-      if (window.dataLayer) window.dataLayer.push({ event: 'ChatAssist', action: event });
+    function updateLastBot(text) {
+      const msgs = messagesEl.querySelectorAll('.message.bot');
+      const last = msgs[msgs.length - 1];
+      last.textContent += text;
+      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
   
-    // A/B test fallback: basic static response if API unreachable
-    setTimeout(() => {
-      if (!window.fetch) {
-        appendMessage('bot', 'AI chat is currently unavailable.');
-        sendAnalytics('fallback_triggered');
-      }
-    }, 3000);
+    // Analytics via Web Worker
+    const worker = new Worker(window.CHATASSIST_CSS_URL.replace('widget.css','analyticsWorker.js'));
+    function sendAnalytics(action) {
+      worker.postMessage({ action, ts: Date.now() });
+    }
   
   })(window, document);
