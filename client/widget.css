@@ -1,0 +1,49 @@
+#chatassist-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    font-family: sans-serif;
+    z-index: 10000;
+  }
+  .chat-bar {
+    background: #007bff;
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  .chat-window {
+    width: 300px;
+    height: 400px;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .hidden { display: none; }
+  .messages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+  }
+  .message.user { text-align: right; margin: 5px 0; }
+  .message.bot { text-align: left; margin: 5px 0; }
+  .input-form {
+    display: flex;
+    border-top: 1px solid #eee;
+  }
+  .input-form input {
+    flex: 1;
+    border: none;
+    padding: 10px;
+  }
+  .input-form button {
+    border: none;
+    padding: 10px 15px;
+    background: #007bff;
+    color: #fff;
+    cursor: pointer;
+  }
