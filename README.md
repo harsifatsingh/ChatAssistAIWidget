@@ -263,6 +263,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Made with ❤️ by [Your Name]
-
-Need help? Join our [Discord community](https://discord.gg/your-invite) or [open an issue](https://github.com/YourUserName/ChatAssistAIWidget/issues).
+Made with ❤️ by Harsifat Singh
