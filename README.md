@@ -2,9 +2,7 @@
 
 > An embeddable, production‑ready chat widget powered by OpenAI GPT‑4, offering streaming responses, offline support, advanced analytics, and enterprise‑grade security.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-[![Build Status](https://img.shields.io/github/workflow/status/YourUserName/ChatAssistAIWidget/CI)](https://github.com/YourUserName/ChatAssistAIWidget/actions)
+![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
 
 ## 🚀 Features
 
@@ -26,7 +24,6 @@
 - [Deployment](#-deployment)
 - [Contributing](#-contributing)
 - [Troubleshooting](#-troubleshooting)
-- [License](#-license)
 
 ## 🛠️ Installation & Setup
 
@@ -224,8 +221,8 @@ The repository includes GitHub Actions workflows:
 
 One-click deploy buttons:
 
-[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https%3A%2F%2Fgithub.com%2FYourUserName%2FChatAssistAIWidget)
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/YourUserName/ChatAssistAIWidget)
+[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https%3A%2F%2Fgithub.com%2Fharsifatsingh%2FChatAssistAIWidget)
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/harsifatsingh/ChatAssistAIWidget)
 
 ## 📝 Contributing
 
@@ -236,8 +233,6 @@ Contributions are welcome! Please follow these steps:
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
-
-Please adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) and [Contribution Guidelines](CONTRIBUTING.md).
 
 ## 🔍 Troubleshooting
 
@@ -256,10 +251,6 @@ Enable debug mode to see detailed logs:
   window.CHATASSIST_DEBUG = true;
 </script>
 ```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
